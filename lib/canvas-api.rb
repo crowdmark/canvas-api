@@ -117,7 +117,7 @@ module Canvas
       raise ApiError.new("unexpected redirect to #{response.headers['Location']}") if response.code.to_s.match(/3\d\d/)
       json = JSON.parse(response.body) rescue {'error' => 'invalid JSON'}
       if !json.is_a?(Array)
-        raise ApiError.new(json['error']) if json['error']
+        raise ApiError.new("#{json['error']} #{response.body}") if json['error']
         raise ApiError.new(json['errors']) if json['errors']
         if !response.code.to_s.match(/2\d\d/)
           json['message'] ||= "unexpected error"
