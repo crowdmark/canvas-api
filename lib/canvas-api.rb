@@ -54,17 +54,29 @@ module Canvas
       oauth_url(callback_url, "/auth/userinfo")
     end
   
-    def retrieve_access_token(code, callback_url)
+    def retrieve_access_token(code, callback_url, grant_type: nil, scope: nil)
       raise "client_id required for oauth flow" unless @client_id
       raise "secret required for oauth flow" unless @secret
       raise "code required" unless code
       raise "callback_url required" unless callback_url
       raise "invalid callback_url" unless (URI.parse(callback_url) rescue nil)
       @token = "ignore"
-      res = post("/login/oauth2/token", :client_id => @client_id, :redirect_uri => callback_url, :client_secret => @secret, :code => code)
+      opts = {
+        :client_id => @client_id,
+        :redirect_uri => callback_url,
+        :client_secret => @secret,
+        :code => code,
+        :grant_type => (grant_type || 'authorization_code')
+      }.tap { |opts|
+        opts[:scope] = scope.join(' ') if scope.present?
+      }
+
+      res = post("/login/oauth2/token", opts)
+
       if res['access_token']
         @token = res['access_token']
       end
+
       res
     end
   
