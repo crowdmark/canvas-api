@@ -168,16 +168,24 @@ module Canvas
     def put(endpoint, params={})
       query_parameters = params.is_a?(Hash) ? params['query_parameters'] || params[:query_parameters] : {}
       generate_uri(endpoint, query_parameters)
-      request = Typhoeus::Request.new(@uri.to_s, method: :put)
-      request.options[:body] = clean_params(params)
+      request = Typhoeus::Request.new(
+        @uri.to_s,
+        method: :put,
+        headers: { 'Content-Type' => "application/json"},
+        body: params.to_json
+      )
       retrieve_response(request)
     end
   
     def post(endpoint, params={})
       query_parameters = params.is_a?(Hash) ? params['query_parameters'] || params[:query_parameters] : {}
       generate_uri(endpoint, query_parameters)
-      request = Typhoeus::Request.new(@uri.to_s, method: :post)
-      request.options[:body] = params #clean_params(params)
+      request = Typhoeus::Request.new(
+        @uri.to_s,
+        method: :post,
+        headers: { 'Content-Type' => "application/json"},
+        body: params.to_json
+      )
       retrieve_response(request)
     end
 
