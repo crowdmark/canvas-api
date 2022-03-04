@@ -54,17 +54,29 @@ module Canvas
       oauth_url(callback_url, "/auth/userinfo")
     end
   
-    def retrieve_access_token(code, callback_url)
+    def retrieve_access_token(code, callback_url, grant_type: nil, scope: nil)
       raise "client_id required for oauth flow" unless @client_id
       raise "secret required for oauth flow" unless @secret
       raise "code required" unless code
       raise "callback_url required" unless callback_url
       raise "invalid callback_url" unless (URI.parse(callback_url) rescue nil)
       @token = "ignore"
-      res = post("/login/oauth2/token", :client_id => @client_id, :redirect_uri => callback_url, :client_secret => @secret, :code => code)
+      opts = {
+        :client_id => @client_id,
+        :redirect_uri => callback_url,
+        :client_secret => @secret,
+        :code => code,
+        :grant_type => (grant_type || 'authorization_code')
+      }.tap { |opts|
+        opts[:scope] = scope.join(' ') if scope.present?
+      }
+
+      res = post("/login/oauth2/token", opts)
+
       if res['access_token']
         @token = res['access_token']
       end
+
       res
     end
   
@@ -146,28 +158,40 @@ module Canvas
     end
 
     def delete(endpoint, params={})
-      generate_uri(endpoint, params['query_parameters'] || params[:query_parameters])
+      query_parameters = params.is_a?(Hash) ? params['query_parameters'] || params[:query_parameters] : {}
+      generate_uri(endpoint, query_parameters)
       request = Typhoeus::Request.new(@uri.to_s, method: :delete)
       request.options[:body] = clean_params(params)
       retrieve_response(request)
     end
   
     def put(endpoint, params={})
-      generate_uri(endpoint, params['query_parameters'] || params[:query_parameters])
-      request = Typhoeus::Request.new(@uri.to_s, method: :put)
-      request.options[:body] = clean_params(params)
+      query_parameters = params.is_a?(Hash) ? params['query_parameters'] || params[:query_parameters] : {}
+      generate_uri(endpoint, query_parameters)
+      request = Typhoeus::Request.new(
+        @uri.to_s,
+        method: :put,
+        headers: { 'Content-Type' => "application/json"},
+        body: params.to_json
+      )
       retrieve_response(request)
     end
   
     def post(endpoint, params={})
-      generate_uri(endpoint, params['query_parameters'] || params[:query_parameters])
-      request = Typhoeus::Request.new(@uri.to_s, method: :post)
-      request.options[:body] = params #clean_params(params)
+      query_parameters = params.is_a?(Hash) ? params['query_parameters'] || params[:query_parameters] : {}
+      generate_uri(endpoint, query_parameters)
+      request = Typhoeus::Request.new(
+        @uri.to_s,
+        method: :post,
+        headers: { 'Content-Type' => "application/json"},
+        body: params.to_json
+      )
       retrieve_response(request)
     end
 
     def post_multi(endpoint, params={})
-      generate_uri(endpoint, params['query_parameters'] || params[:query_parameters])
+      query_parameters = params.is_a?(Hash) ? params['query_parameters'] || params[:query_parameters] : {}
+      generate_uri(endpoint, query_parameters)
       request = Typhoeus::Request.new(@uri.to_s, method: :post)
       request.options[:body] = clean_params(params)
       retrieve_response(request)
