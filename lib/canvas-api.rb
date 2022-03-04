@@ -54,6 +54,7 @@ module Canvas
       oauth_url(callback_url, "/auth/userinfo")
     end
   
+    # see: https://canvas.instructure.com/doc/api/file.oauth.html#oauth2-flow-3
     def retrieve_access_token(code, callback_url, grant_type: nil, scope: nil)
       raise "client_id required for oauth flow" unless @client_id
       raise "secret required for oauth flow" unless @secret
@@ -66,6 +67,7 @@ module Canvas
         :redirect_uri => callback_url,
         :client_secret => @secret,
         :code => code,
+        :replace_tokens => true,
         :grant_type => (grant_type || 'authorization_code')
       }.tap { |opts|
         opts[:scope] = scope.join(' ') if scope.present?
