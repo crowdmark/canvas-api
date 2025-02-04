@@ -290,7 +290,14 @@ module Canvas
     end
   end
 
-  class ApiError < StandardError; end
+  class ApiError < StandardError
+    def response_status
+      matches = message.match(/status: (\d+)/)
+
+      return nil unless matches
+      matches[1]
+    end
+  end
 
   class ResultSet < Array
     def initialize(api, arr)
