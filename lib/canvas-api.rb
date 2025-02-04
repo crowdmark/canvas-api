@@ -70,7 +70,7 @@ module Canvas
         :replace_tokens => true,
         :grant_type => (grant_type || 'authorization_code')
       }.tap { |opts|
-        opts[:scope] = scope.join(' ') if scope.present?
+        opts[:scope] = scope.join(' ') if !scope.nil? && scope.present?
       }
 
       res = post("/login/oauth2/token", opts)
