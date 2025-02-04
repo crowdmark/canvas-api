@@ -128,15 +128,15 @@ module Canvas
       rescue Timeout::Error => e
         raise ApiError.new("request timed out")
       end
-      raise ApiError.new("unexpected redirect to #{response.headers['Location']}") if response.code.to_s.match(/3\d\d/)
+      raise ApiError.new("unexpected redirect to #{response.headers['Location']}, status: #{response.code}") if response.code.to_s.match(/3\d\d/)
       json = JSON.parse(response.body) rescue {'error' => 'invalid JSON'}
       if !json.is_a?(Array)
-        raise ApiError.new("#{json['error']} #{response.body}") if json['error']
+        raise ApiError.new("#{json['error']} '#{response.body}', status: #{response.code}") if json['error']
         raise ApiError.new(json['errors']) if json['errors']
         if !response.code.to_s.match(/2\d\d/)
           json['message'] ||= "unexpected error"
           json['status'] ||= response.code.to_s
-          raise ApiError.new("#{json['status']} #{json['message']}") 
+          raise ApiError.new("#{json['message']}, status: #{json['status']}")
         end
       else
         json = ResultSet.new(self, json)

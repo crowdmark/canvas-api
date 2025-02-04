@@ -67,7 +67,7 @@ describe "GET requests" do
       @api.generate_uri("/api/v1/bacon")
       stub_request("/api/v1/bacon", :code => 302, :location => "http://www.example.com")
       req = @api.get_request("/api/v1/bacon")
-      expect { @api.retrieve_response(req) }.to raise_error(Canvas::ApiError, "unexpected redirect to http://www.example.com")
+      expect { @api.retrieve_response(req) }.to raise_error(Canvas::ApiError, "unexpected redirect to http://www.example.com, status: 302")
     end
     
     it "should raise on non-200 response" do
@@ -75,7 +75,7 @@ describe "GET requests" do
       @api.generate_uri("/api/v1/bacon")
       stub_request("/api/v1/bacon", :code => 400, :body => {}.to_json)
       req = @api.get_request("/api/v1/bacon")
-      expect { @api.retrieve_response(req) }.to raise_error(Canvas::ApiError, "400 unexpected error")
+      expect { @api.retrieve_response(req) }.to raise_error(Canvas::ApiError, "unexpected error, status: 400")
     end
     
     it "should parse error messages" do
@@ -83,7 +83,7 @@ describe "GET requests" do
       @api.generate_uri("/api/v1/bacon")
       stub_request("/api/v1/bacon", :code => 400, :body => {:message => "bad message", :status => "invalid"}.to_json)
       req = @api.get_request("/api/v1/bacon")
-      expect { @api.retrieve_response(req) }.to raise_error(Canvas::ApiError, "invalid bad message")
+      expect { @api.retrieve_response(req) }.to raise_error(Canvas::ApiError, "bad message, status: invalid")
     end
     
     it "should raise on non-JSON response" do
@@ -91,7 +91,7 @@ describe "GET requests" do
       @api.generate_uri("/api/v1/bacon")
       stub_request("/api/v1/bacon", :code => 400, :body => "<xml/>")
       req = @api.get_request("/api/v1/bacon")
-      expect { @api.retrieve_response(req) }.to raise_error(Canvas::ApiError, "invalid JSON")
+      expect { @api.retrieve_response(req) }.to raise_error(Canvas::ApiError, "invalid JSON '<xml/>', status: 400")
     end
     
     it "should return JSON on valid response" do
